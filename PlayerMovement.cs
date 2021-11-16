@@ -118,19 +118,5 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(3);
     }
-
-    public override int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
-
-    public override bool Equals(object other)
-    {
-        return base.Equals(other);
-    }
-
-    public override string ToString()
-    {
-        return base.ToString();
-    }
+  
 }
