@@ -1,3 +1,6 @@
+using System.Collections;
+using UnityEngine;
+
 public class PlayerMovement : MonoBehaviour
 {
     //variables
@@ -15,21 +18,24 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jumping")]
     public float jumpForce = 5f;
-    public float gravity;
+    float fallMultiplier = 3f;
     float playerHeight;
     int doubleJump;
     bool isGrounded;
+    bool hasDoubleJumped;
 
     [Header("Slide")]
-    public float slideForce = 6f;
-    public float slidePlayerHeight;
-    
+
     private Vector3 moveDirection;
 
     Rigidbody rb;
     new CapsuleCollider collider;
 
     //\\//\\//\\//\\//\\//\\//\\//\\
+    void Awake()
+    {
+
+    }
     private void Start()
     {
         collider = GetComponentInChildren<CapsuleCollider>();
@@ -40,14 +46,10 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight);
-        
+
         MyInput();
         ControlDrag();
-        
         Jump();
-        Fall();
-
-        Slide();
     }
     private void FixedUpdate()
     {
@@ -89,34 +91,33 @@ public class PlayerMovement : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             doubleJump = 1;
+            hasDoubleJumped = false;
+            fallMultiplier = 3f;
         }
         else if (Input.GetKeyDown(KeyCode.Space) && !isGrounded && doubleJump == 1)
         {
-            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-            doubleJump = 0;           
+            hasDoubleJumped = true;
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            if (hasDoubleJumped)
+            {
+                fallMultiplier = 3.35f;
+            }
+            doubleJump = 0;
         }
     }
     void Fall()
     {
-        if (!isGrounded)
+        if (rb.velocity.y < 1.5f)
         {
-            rb.AddForce(Vector3.down * gravity, ForceMode.Acceleration);
+            rb.velocity += Vector3.up * Physics.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
         }
-        
-    }
-    void Slide()
-    {
-        if (Input.GetKeyDown(KeyCode.LeftControl) && Input.GetKey(KeyCode.W) && isGrounded)
-        {
-            rb.AddForce(transform.forward * slideForce, ForceMode.VelocityChange);
-        }
+
     }
 
     IEnumerator wait()
     {
         yield return new WaitForSeconds(3);
     }
-  
-}
+}}
