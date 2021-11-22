@@ -7,6 +7,8 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] float airMultiplier = 0.4f;
+    Vector3 moveDirection;
+    Vector3 slopeMoveDirection;
     public float moveSpeed = 6f;
     public float movementMultiplier = 10f;
     float horizontalMovement;
@@ -19,15 +21,16 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jumping")]
     public float jumpForce = 5f;
     float fallMultiplier = 3f;
-    float playerHeight;
     int doubleJump;
-    bool isGrounded;
     bool hasDoubleJumped;
 
-    [Header("Slide")]
-
-    private Vector3 moveDirection;
-
+    [Header("Ground detection")]
+    [SerializeField] LayerMask groundMask;
+    RaycastHit slopeHit;
+    float playerHeight;
+    float groundDistance = 0.4f;
+    bool isGrounded;
+  
     Rigidbody rb;
     new CapsuleCollider collider;
 
@@ -45,7 +48,8 @@ public class PlayerMovement : MonoBehaviour
     }
     void Update()
     {
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, playerHeight);
+        isGrounded = Physics.CheckSphere(transform.position - new Vector3(0, 1, 0), groundDistance, groundMask );
+        slopeMoveDirection = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal);
 
         MyInput();
         ControlDrag();
@@ -67,9 +71,13 @@ public class PlayerMovement : MonoBehaviour
     }
     void MovePlayer()
     {
-        if (isGrounded)
+        if (isGrounded && !OnSlope())
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
+        }
+        else if (isGrounded && OnSlope())
+        {
+            rb.AddForce(slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
         }
         else if (!isGrounded)
         {
@@ -115,9 +123,25 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
+    private bool OnSlope()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight))
+        {
+            if (slopeHit.normal != Vector3.up)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
+        return false;
+    }
 
     IEnumerator wait()
     {
         yield return new WaitForSeconds(3);
     }
-}}
+}
